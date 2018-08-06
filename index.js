@@ -1,7 +1,6 @@
 require('babel-register')({
     presets: ['react', 'env']
 });
-
 const nativefier = require('nativefier').default;
 const express = require('express')
 const fs = require('fs');
@@ -15,9 +14,7 @@ const Index = React.createFactory(require('./public/Index').default);
 
 const app = express();
 
-const nativefierAsync = util.promisify(nativefier);
-const zipdirAsync = util.promisify(zipdir);
-const rmdirAsync = util.promisify(rimraf);
+const [nativefierAsync, zipdirAsync, rmdirAsync] = [nativefier, zipdir, rimraf].map(f => util.promisify(f));
 
 app.use(express.urlencoded({extended: false}));
 
@@ -39,9 +36,9 @@ app.post('/', async (req, res, next) => {
     }
 });
 
-app.use(function (error, req, res, next) {
-    console.error(error);
+app.use((error, req, res, next) => {
     res.status(500).send(ReactDOMServer.renderToString(Index({error})));
 });
 
-app.listen(3000, () => console.log('Example app listening on port 3000!'))
+(port => app.listen(port, () => console.log(`Listening on port ${port}!`)))(process.env.PORT || 3000);
+
